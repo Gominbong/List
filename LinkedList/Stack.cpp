@@ -14,26 +14,25 @@ int IsEmpty(Stack* stack) {
 		return false; 
 }
 
-void Push(Stack* stack, int data) {
+void Push(Stack* stack, float data) {
 	Node_stack* NewNode = (Node_stack*)malloc(sizeof(Node_stack));
 	NewNode->data = data;
 	NewNode->next = stack->top;
 	stack->top = NewNode;
 }
 
-int Pop(Stack* stack) {
-	int data;
+float Pop(Stack* stack) {
+	float data;
 	Node_stack* node;
 
 	if (IsEmpty(stack)) {
 		printf("stack memory erro1r");
 		exit(-1);
 	}
-
 	data = stack->top->data;
 	node = stack->top;
 
-	stack->top = stack->top->next;
+	stack->top= stack->top->next;
 	free(node);
 	return data;
 }
@@ -43,24 +42,26 @@ int Peek(Stack* stack) {
 		printf("stack memory error");
 		exit(-1);
 	}
+	if (stack->top->data == '(') {
+		return 0;
+	}
 	return stack->top->data;
-	
 }
+
 int GetPriority(char op) {
 	switch (op) {
-	case '*':return 5;
+	case '*':
 	case '/': return 5;
-	case '+':return 3;
+	case '+':
 	case '-': return 3;
 	case '(': return 1;
-		
 	}
 	return -1;
 }
 int WhoPriority(char op1, char op2) {
 	int op1_Priority = GetPriority(op1);
 	int op2_Priority = GetPriority(op2);
-	
+
 	if (op1_Priority > op2_Priority) {
 		return 1;
 	}
@@ -71,51 +72,63 @@ int WhoPriority(char op1, char op2) {
 		return 0;
 	}
 }
+
 void PostfixConversion(char exp[]) {
 	Stack stack;
 	int ExpLen = strlen(exp)+1;
 	int count=0;
 	for (int i = 0; i <ExpLen; i++) {
-		if (exp[i]=='+' || exp[i] == '-' || exp[i] == '*' || exp[i] == '/') {
+		if (exp[i] == '.' || exp[i] == '+' || exp[i] == '-' || exp[i] == '*' || exp[i] == '/' || exp[i]=='(' || exp[i] ==')' ) {
 			count += 2;
+		}
+		if (exp[i] == '.') {
+			count += 1;
 		}
 	}
 	ExpLen = ExpLen + count;
 	char* ConvExp = (char*)malloc(ExpLen);
 	int index = 0;
 	char comparison, popOp;
-
+	int flag = 1;
 	memset(ConvExp, 0, sizeof(char ) * ExpLen);
 	InitStack(&stack);
-	for (int i = 0; i < ExpLen-count; i++) {
+	for (int i = 0; i < ExpLen - count; i++) {
 		comparison = exp[i];
-		if (isdigit(comparison)) {   //저장된값이 숫자면 T
+		if (isdigit(comparison) || comparison=='.' ) {   //저장된값이 숫자면 T
 			ConvExp[index++] = comparison;
 		}
-		else {
-			//ConvExp[index++] = ' ';
+		else{
+		     if ( comparison== '(' ) {
+				ConvExp[index++] = ' ';
+				Push(&stack, comparison);
+             }		
 			switch (comparison) {
-			case '(':
-				Push(&stack, comparison); break;
 			case ')':
-				while (1) {
+				if (stack.top->data =='(' ) {
+					ConvExp[index++] = '*';
+					Pop(&stack);
+					flag = 0;
+					break;
+				}
+				while (flag) {
 					popOp = Pop(&stack);
 					if (popOp == '(') {
+						ConvExp[index++] = ' ';
 						break;
 					}
+					ConvExp[index++] = ' ';
 					ConvExp[index++] = popOp;
 				} break;
-
 			case '+':
 			case '-':
 			case '*':
 			case '/':
-				while (!IsEmpty(&stack) && WhoPriority(Peek(&stack), comparison) > 0) {
+				while (!IsEmpty(&stack) && WhoPriority(Peek(&stack), comparison) >= 0) {
+					ConvExp[index++] = ' ';
 					ConvExp[index++] = Pop(&stack);
 				}
-				
+				ConvExp[index++] = ' ';
 				Push(&stack, comparison);
-			
 				break;
 			}
 		}
@@ -123,71 +136,55 @@ void PostfixConversion(char exp[]) {
 	while (!IsEmpty(&stack)) {
 		ConvExp[index++] = Pop(&stack);
 	}
-	
-
 	strcpy(exp, ConvExp);
 	free(ConvExp);
 }
 
-int Calculate(char exp[]){
+float Calculate(char exp[]) {
 	Stack stack;
 	int ExpLen = strlen(exp);
-
-	printf("%d", ExpLen);
-	char comparison, op1, op2;
-
+	char comparison;
+	float op1=0, op2=0;
 	InitStack(&stack);
-	char temp[10];
-	char* temp1;
-	char a[10];
 	char b[100];
-	int j = 0;
+	int k = 0;
 	int num = 0;
-	for (int i = 0; i < ExpLen; i++) {
-		//숫자 아스키인지 판단
-		
-		if (exp[i]==' ') {
-			//공백이면.
-			//저장한 값들을 가지고 값을 만들어서 atoi로 정수값으로 만듬.
-			num = atoi(b);
-			//b배열 초기화.
-			j = 0;
+	
+	for (int i = 0; i<ExpLen; i++) {
+		comparison = exp[i];
+		if (isdigit(comparison) || exp[i]=='.' ) {
+			b[k++] = exp[i];
+			if (exp[i + 1] == ' ') {
+				Push(&stack, atof(b));
+				memset(b, 0, 100);
+				k = 0;
+				i++;
+			}
+			else if ( !isdigit(exp[i + 1]) ) {
+				if (exp[i + 1] != '.') {
+					Push(&stack, atof(b));
+					memset(b, 0, 100);
+					k = 0;
+				}
+			}
 		}
-		else if (exp[i] >= '0' || exp[i] <= '9')
-		{
-			b[j] = exp[i];
-			j++;
-			continue;
+		else if (exp[i]==' ' || exp[i]=='.') {
+			Push(&stack, atof(b));
+			memset(b, 0, 100);
+			k = 0;
 		}
-		else {
-			comparison = exp[i];
-		}
-		//comparison = exp[i];
-		
-		//if (isdigit(comparison)) {
-//			a[i] = comparison;
-		//if ( isdigit(num))
-		if ( num>=0 )
-		{		
-
-			//Push(&stack, comparison - '0');
-			Push(&stack, num);
-			num = -1;
-		}
-		else {
+    	else{
 			op2 = Pop(&stack);
 			op1 = Pop(&stack);
-
 			switch (comparison) {
 			case '+':
-				printf("asdasd");
-				Push(&stack, op1 + op2); break;
+				Push(&stack, op1 + op2); while(exp[i+1] == ' ') { i++; } break;
 			case '-':
-				Push(&stack, op1 - op2); break;
+				Push(&stack, op1 - op2); while (exp[i + 1] == ' ') { i++; } break;
 			case '*':
-				Push(&stack, op1 * op2); break;
-			case '/':
-				Push(&stack, op1 / op2); break;
+				Push(&stack, op1 * op2); while (exp[i + 1] == ' ') { i++; } break;
+			case '/': 
+				Push(&stack, op1 / op2); while (exp[i + 1] == ' ') { i++; } break;
 			}
 		}
 	}
@@ -195,14 +192,12 @@ int Calculate(char exp[]){
 }
 
 void Start1() {
-
 	char str[100];
 	while (1) {
 		printf("후위식 바꿀식 : ");
 		fgets(str, sizeof(str), stdin);
 		PostfixConversion(str);
 		printf("후위식 : %s  \n", str);
-		printf("후위식 계산 : %d \n\n\n", Calculate(str));
+		printf("후위식 계산 : %f \n\n\n", Calculate(str));
 	}
-	
 }
