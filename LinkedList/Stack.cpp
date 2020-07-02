@@ -4,7 +4,7 @@
 #include<string.h>
 #include<ctype.h>
 void InitStack(Stack* stack) {
-	stack->top = NULL; asdasdasd
+	stack->top = NULL;
 }
 
 int IsEmpty(Stack* stack) {

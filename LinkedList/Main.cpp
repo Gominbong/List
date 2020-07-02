@@ -8,5 +8,7 @@ int main(void) {
 	//Start1();  //스택
 	//Start2();  //트리
 	//Start3();  //힙
-	Start4(); //힙정렬
+	//Start4(); //힙정렬
+	//Start5(); //병합정렬
+	Start6();
 }
