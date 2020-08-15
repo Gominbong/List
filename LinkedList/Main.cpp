@@ -10,5 +10,5 @@ int main(void) {
 	//Start3();  //Èü
 	//Start4(); //ÈüÁ¤·Ä
 	//Start5(); //º´ÇÕÁ¤·Ä
-	Start6();
+	Start6(); //Äü Á¤·Ä
 }
