@@ -16,9 +16,12 @@ int IsEmpty(Stack* stack) {
 
 void Push(Stack* stack, float data) {
 	Node_stack* NewNode = (Node_stack*)malloc(sizeof(Node_stack));
-	NewNode->data = data;
-	NewNode->next = stack->top;
-	stack->top = NewNode;
+	if (NewNode != NULL) {
+		NewNode->data = data;
+		NewNode->next = stack->top;
+		stack->top = NewNode;
+	}
+	
 }
 
 float Pop(Stack* stack) {
@@ -98,14 +101,13 @@ void PostfixConversion(char exp[]) {
 			ConvExp[index++] = comparison;
 		}
 		else{
-		     if ( comparison== '(' ) {
-				ConvExp[index++] = ' ';
-				Push(&stack, comparison);
-             }		
 			switch (comparison) {
+			
+			case '(':
+					Push(&stack, comparison);
+					break;
 			case ')':
 				if (stack.top->data =='(' ) {
-					ConvExp[index++] = '*';
 					Pop(&stack);
 					flag = 0;
 					break;
